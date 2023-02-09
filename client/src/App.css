@@ -1,0 +1,41 @@
+.App {
+  text-align: center;
+}
+
+.top-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background-color: #282c34;
+  font-size: 35px;
+}
+
+a {
+  color: white;
+  text-decoration: none;
+}
+
+.login-page {
+  display: flex;
+  flex-direction: column;
+  max-width: 20%;
+  margin: auto;
+}
+
+.register-page {
+  display: flex;
+  flex-direction: column;
+  max-width: 20%;
+  margin: auto;
+}
