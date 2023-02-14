@@ -32,6 +32,6 @@ public class SecureController : ControllerBase
         var user = _context.Users.Find(userId);
         if (user == null) return BadRequest("User not found from JWT claim. This should not be possible.");
         
-        return Ok($"Hello {user.Email}");
+        return Ok($"Hello {user.Email}. Your role is: {user.Role}");
     }
 }

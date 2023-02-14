@@ -2,6 +2,7 @@ using server.Models;
 using server.Context;
 using server.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.Security.Claims;
@@ -37,24 +38,24 @@ public class UserAuthenticationController : ControllerBase
 
         var existingUser = _context.Users
             .FirstOrDefault(u => u.Email == UserRegisterRequest.Email);
-
         if (existingUser != null) return BadRequest("Username already exists");
 
-        var userSalt = _helper.RandomString(16);
-        var passwordHash = _helper.HashString(UserRegisterRequest.Password + userSalt);
+        var newUser = _helper.CreateNewUserObject(UserRegisterRequest);
+        await _context.Users.AddAsync(newUser);
 
-        await _context.Users.AddAsync(new User 
-        {
-            Id = Guid.NewGuid(),
-            Email = UserRegisterRequest.Email,
-            Password = passwordHash,
-            Salt = userSalt,
-            Role = UserRegisterRequest.Role,
-            StoreId = UserRegisterRequest.Role.ToLower() == "user" ? Guid.Empty : Guid.NewGuid()
-        });
+        if(UserRegisterRequest.Role == "storeowner") {
+            if(String.IsNullOrEmpty(UserRegisterRequest.StoreName)) return BadRequest("Store owner must provide a store name");
+            await _context.Stores.AddAsync(new Store {
+                Id = newUser.StoreId,
+                Name = UserRegisterRequest.StoreName,
+                StoreOwnerId = newUser.Id
+            });
+        }
         await _context.SaveChangesAsync();
 
-        return Ok();
+        var token = _helper.CreateJWT(newUser.Id);
+
+        return Ok(new { token = token });
     }
 
     [HttpPost]
@@ -70,18 +71,25 @@ public class UserAuthenticationController : ControllerBase
 
         if (existingUser == null) return BadRequest("Wrong username or password");
 
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.ASCII.GetBytes(_config["Jwt:Key"]);
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[] { new Claim("Id", existingUser.Id.ToString()) }),
-            Expires = DateTime.UtcNow.AddDays(7),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
-            Issuer = _config["Jwt:Issuer"],
-            Audience = _config["Jwt:Audience"]
-        };
-        var token = tokenHandler.CreateToken(tokenDescriptor);
+        var token = _helper.CreateJWT(existingUser.Id);
 
-        return Ok(new { token = tokenHandler.WriteToken(token) });
+        return Ok(new { token = token });
+    }
+
+    [Authorize]
+    [HttpGet]
+    [Route("userinfo")]
+    public IActionResult GetUserInfo()
+    {
+        var userId = _helper.GetRequestUserId(HttpContext);
+        var user = _context.Users.Find(userId);
+        if (user == null) return BadRequest("User not found from JWT claim. This should not be possible.");
+
+        var userStore = _context.Stores.Where(p => p.StoreOwnerId == user.Id).FirstOrDefault();
+        return Ok(new UserInfoDTO{ 
+            Email = user.Email,
+            Role = user.Role,
+            StoreName = userStore == null ? "" : userStore.Name
+        });
     }
 }

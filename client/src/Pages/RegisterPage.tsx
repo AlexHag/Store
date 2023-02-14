@@ -7,39 +7,47 @@ function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("user");
-  const [registerError, setRegisterError] = useState("");
+  const [storeName, setStoreName] = useState("");
+  const [registerStatus, setRegisterStatus] = useState("");
 
   const handleRegister = async () => {    
     if(email === "" || password === "" || confirmPassword === "" || role === "") {
-      setRegisterError('Please submit all fields');
+      setRegisterStatus('Please submit all fields');
+      return;
+    }
+    if(role === "storeowner" && storeName === "") {
+      setRegisterStatus('Please submit all fields');
       return;
     }
     if(password !== confirmPassword) {
-      setRegisterError('Password and email must match');
+      setRegisterStatus('Password and email must match');
       return;
     }
-    setRegisterError('Loading...');
+
+    setRegisterStatus('Loading...');
     const requestOptions = {
       method: 'POST',
       headers: { 'Accept': 'application/json',
                 'Content-Type': 'application/json' },
-      body: JSON.stringify({email: email, password: password, role: role})
+      body: JSON.stringify({email: email, password: password, role: role, storename: storeName})
     };
 
     const response = await fetch(`http://localhost:5046/api/register`, requestOptions);
     if(response.status === 200) {
-      navigate('/');
-      return
+      const jwtToken = await response.json();
+      console.log("JWT:TOKEN from login: ", jwtToken['token']);
+      localStorage.setItem('Authorization', jwtToken['token']);
+      navigate("/");
     } else {
-      setRegisterError('Email already exists');
+      setRegisterStatus('Email already exists');
     }
   };
 
   useEffect(() => {
     setTimeout(() => {
-      setRegisterError("");
+      setRegisterStatus("");
     }, 5000)
-  }, [registerError]);
+  }, [registerStatus]);
 
   return (
     <div className="register-page">
@@ -49,14 +57,20 @@ function RegisterPage() {
       <input placeholder="Password" onChange={(e) => setPassword(e.target.value)}></input>
       <input placeholder="Confirm Password" onChange={(e) => setConfirmPassword(e.target.value)}></input>
       
-      <label htmlFor="role">Choose a role:</label>
+      <p>Choose a role:</p>
       <select defaultValue="user" name="role" id="cars" onChange={(e) => setRole(e.target.value)}>
         <option value="user">User</option>
         <option value="storeowner">Store Owner</option>
       </select>
+      {role==='storeowner' && 
+        <>
+          <p>Choose a store name: </p>
+          <input placeholder="Store Name" onChange={(e) => setStoreName(e.target.value)}></input>
+        </>
+      }
 
       <button onClick={handleRegister}>Register</button>
-      <p style={{color: 'red'}}>{registerError}</p>
+      <p style={{color: 'red'}}>{registerStatus}</p>
     </div>
   )
 }

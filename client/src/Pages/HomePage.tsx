@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { UserInfoContext } from '../App';
 
 function HomePage() {
+  const userInfo = useContext(UserInfoContext);
   const [helloMessage, setHelloMessage] = useState('');
   
   const handleHello = async () => {
@@ -25,6 +27,7 @@ function HomePage() {
       <h1>Home page</h1>
       <button onClick={handleHello}>Say Hello</button>
       <p>Response: {helloMessage}</p>
+      <p>Context: {userInfo.email}</p>
     </>
   )
 }

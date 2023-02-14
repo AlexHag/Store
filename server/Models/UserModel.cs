@@ -21,4 +21,12 @@ public class UserRegisterDTO
     public string Email { get; set; }
     public string Password { get; set; }
     public string Role { get; set; }
+    public string? StoreName { get; set; }
+}
+
+public class UserInfoDTO
+{
+    public string Email { get; set; }
+    public string Role { get; set; }
+    public string? StoreName { get; set; }
 }

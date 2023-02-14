@@ -11,7 +11,7 @@ using server.Context;
 namespace server.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20230209114244_InitialCreate")]
+    [Migration("20230214140552_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
