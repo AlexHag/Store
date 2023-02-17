@@ -7,25 +7,28 @@ using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Mvc;
 
 namespace server.Services;
 
 public class AuthenticationService : IAuthenticationService
 {
     private DataContext _context;
+    private readonly IHelperFunctions _helper; 
     private readonly IConfiguration _config;
 
-    public AuthenticationService(DataContext context, IConfiguration config) 
+    public AuthenticationService(DataContext context, IConfiguration config, IHelperFunctions helper) 
     {
         _config = config;
         _context = context;
+        _helper = helper;
     }
 
-    public async Task<AuthenticationServiceResponse> RegisterUser(UserRegisterDTO UserRegisterRequest)
+    public async Task<ControllerServiceResponse> RegisterUser(UserRegisterDTO UserRegisterRequest)
     {
         if(UserRegisterRequest.Role.ToLower() != "user" && UserRegisterRequest.Role.ToLower() != "storeowner") 
         {
-            return new AuthenticationServiceResponse
+            return new ControllerServiceResponse
             {
                 IsSuccess = false,
                 ErrorMessage = "Role must be either user or storeowner"
@@ -36,7 +39,7 @@ public class AuthenticationService : IAuthenticationService
             .FirstOrDefault(u => u.Email == UserRegisterRequest.Email);
         if (existingUser != null) 
         {
-            return new AuthenticationServiceResponse
+            return new ControllerServiceResponse
             {
                 IsSuccess = false,
                 ErrorMessage = "Email already exists"
@@ -66,7 +69,7 @@ public class AuthenticationService : IAuthenticationService
         {
             if(String.IsNullOrEmpty(UserRegisterRequest.StoreName)) 
             {
-                return new AuthenticationServiceResponse
+                return new ControllerServiceResponse
                 {
                     IsSuccess = false,
                     ErrorMessage = "Store owner must provide a store name"
@@ -82,14 +85,14 @@ public class AuthenticationService : IAuthenticationService
 
         await _context.SaveChangesAsync();
         var token = CreateJWT(newUser.Id);
-        return new AuthenticationServiceResponse 
+        return new ControllerServiceResponse 
         {
             IsSuccess = true,
-            Token = token
+            Value = token
         };
     }
 
-    public async Task<AuthenticationServiceResponse> LoginUser(UserLoginDTO UserLoginRequest)
+    public async Task<ControllerServiceResponse> LoginUser(UserLoginDTO UserLoginRequest)
     {
         var userSalt = _context.Users
             .Where(u => u.Email == UserLoginRequest.Email)
@@ -97,7 +100,7 @@ public class AuthenticationService : IAuthenticationService
             .FirstOrDefault();
         if (userSalt == null) 
         {
-            return new AuthenticationServiceResponse 
+            return new ControllerServiceResponse 
             {
                 IsSuccess = false,
                 ErrorMessage = "Wrong username or password"
@@ -109,7 +112,7 @@ public class AuthenticationService : IAuthenticationService
             .FirstOrDefault();
         if (existingUser == null) 
         {
-            return new AuthenticationServiceResponse 
+            return new ControllerServiceResponse 
             {
                 IsSuccess = false,
                 ErrorMessage = "Wrong username or password"
@@ -118,10 +121,28 @@ public class AuthenticationService : IAuthenticationService
 
         var token = CreateJWT(existingUser.Id);
 
-        return new AuthenticationServiceResponse
+        return new ControllerServiceResponse
         {
             IsSuccess = true,
-            Token = token
+            Value = token
+        };
+    }
+
+    public async Task<ControllerServiceResponse> GetUserInfo(HttpContext httpContext) 
+    {
+        var userId = _helper.GetRequestUserId(httpContext);
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) throw new Exception("User is null eventhough jwt token is valid. This should not happen.");
+
+        var userStore = _context.Stores.Where(p => p.StoreOwnerId == user.Id).FirstOrDefault();
+        return new ControllerServiceResponse
+        {
+            IsSuccess = true,
+            Value =  new UserInfoDTO { 
+            Email = user.Email,
+            Role = user.Role,
+            StoreName = userStore == null ? "" : userStore.Name
+            }
         };
     }
     

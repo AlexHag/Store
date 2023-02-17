@@ -3,6 +3,8 @@ import logo from './logo.svg';
 import './App.css';
 import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
 import { useState, useEffect, createContext, useContext } from 'react';
+import { useCookies } from 'react-cookie';
+
 
 import Header from './Components/Header';
 import HomePage from './Pages/HomePage';
@@ -11,16 +13,12 @@ import RegisterPage from './Pages/RegisterPage';
 import ErrorOccuredPage from './Pages/ErrorOccuredPage';
 import MyStorePage from './Pages/MyStorePage';
 import ProfilePage from './Pages/ProfilePage';
-
-interface UserInfo {
-  email: string,
-  role: string,
-  storeName: string
-}
+import { UserInfo } from './Types';
 
 export const UserInfoContext = createContext<UserInfo>({email: "", role: "", storeName: ""});
 
 function App() {
+  const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
   const [userInfoValue, setUserInfoValue] = useState<UserInfo>({email: "", role: "", storeName: ""});
 
   useEffect(() => {
@@ -29,11 +27,10 @@ function App() {
   }, []);
 
   const GetUserInfo = async () => {
-    const authToken = localStorage.getItem("Authorization");
-    if(!authToken) return;
+    if(!cookies['Authorization']) return;
     const response = await fetch('http://localhost:5046/api/userinfo', {
       headers: {
-        'Authorization': 'Bearer ' + authToken
+        'Authorization': 'Bearer ' + cookies['Authorization']
       }
     });
     if(response.status !== 200) return;

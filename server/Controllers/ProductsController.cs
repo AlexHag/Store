@@ -8,23 +8,54 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api")]
 public class ProductsController : ControllerBase
 {
-    private DataContext _context;
-    private readonly IConfiguration _config;
-    private readonly IHelperFunctions _helper;
+    private readonly IProductsService _service;
 
-    public ProductsController(DataContext context, IConfiguration config, IHelperFunctions helper)
+    public ProductsController(IProductsService service)
     {
-        _context = context;
-        _config = config;
-        _helper = helper;
+        _service = service;
     }
 
     [HttpPost]
     [Authorize]
-    [Route("addproduct")]
-    public IActionResult AddProduct([FromBody] AddProductDTO AddProductRequest)
+    [Route("Products/Add")]
+    public async Task<IActionResult> AddProduct([FromBody] AddProductDTO AddProductRequest)
     {
-        
-        return Ok();
+        var AddProductProcess = await _service.AddProduct(AddProductRequest, HttpContext);
+        if(AddProductProcess.IsSuccess)
+        {
+            return Ok(AddProductProcess.Value);
+        }
+        else
+        {
+            return BadRequest(AddProductProcess.ErrorMessage);
+        }
+    }
+
+    [HttpGet("Product/{ProductId}")]
+    public async Task<IActionResult> GetProduct(Guid ProductId)
+    {
+        var GetProductProcess = await _service.GetProduct(ProductId);
+        if(GetProductProcess.IsSuccess)
+        {
+            return Ok(GetProductProcess.Value);
+        }
+        else
+        {
+            return NotFound(GetProductProcess.ErrorMessage);
+        }
+    }
+
+    [HttpGet("Store/{StoreName}")]
+    public async Task<IActionResult> GetProductsFromStore(string StoreName)
+    {
+        var GetProductsFromStoreProcess = await _service.GetProductFromStore(StoreName);
+        if(GetProductsFromStoreProcess.IsSuccess)
+        {
+            return Ok(GetProductsFromStoreProcess.Value);
+        }
+        else
+        {
+            return NotFound(GetProductsFromStoreProcess.ErrorMessage);
+        }
     }
 }

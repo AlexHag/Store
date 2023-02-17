@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
+import { useCookies } from "react-cookie";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../Components/Header";
 
 function RegisterPage() {
   let navigate = useNavigate();
+  const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,8 +39,8 @@ function RegisterPage() {
     const response = await fetch(`http://localhost:5046/api/register`, requestOptions);
     if(response.status === 200) {
       const jwtToken = await response.json();
-      console.log("JWT:TOKEN from login: ", jwtToken['token']);
       localStorage.setItem('Authorization', jwtToken['token']);
+      setCookie('Authorization', jwtToken['token']);
       navigate("/");
     } else {
       setRegisterStatus('Email already exists');

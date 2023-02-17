@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useCookies } from 'react-cookie';
 import Header from '../Components/Header';
 
 function LoginPage() {
+  let navigate = useNavigate();
+  const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  let navigate = useNavigate();
+  
   
   const handleLogin = async (event: any) => {
     event.preventDefault();
@@ -23,6 +26,7 @@ function LoginPage() {
     if(response.status === 200) {
       const jwtToken = await response.json();
       localStorage.setItem('Authorization', jwtToken['token']);
+      setCookie('Authorization', jwtToken['token']);
       navigate("/");
       navigate(0);
     } else {

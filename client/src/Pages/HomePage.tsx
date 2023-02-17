@@ -1,12 +1,18 @@
 import { useState, useContext } from 'react';
+import { useCookies } from 'react-cookie';
 import { UserInfoContext } from '../App';
 import Header from '../Components/Header';
 
 function HomePage() {
   const userInfo = useContext(UserInfoContext);
   const [helloMessage, setHelloMessage] = useState('');
+  const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
+
+  const jwtInfo = cookies['Authorization'] ? JSON.parse(atob(cookies['Authorization'].split(".")[1])) : null; //.split(".")[1]))
+  
   
   const handleHello = async () => {
+    console.log(jwtInfo['Id'])
     try {
       const response = await fetch('http://localhost:5046/api/secure', {
         headers: {

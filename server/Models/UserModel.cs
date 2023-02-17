@@ -30,10 +30,3 @@ public class UserInfoDTO
     public string Role { get; set; }
     public string? StoreName { get; set; }
 }
-
-public class AuthenticationServiceResponse
-{
-    public bool IsSuccess { get; set; }
-    public string? Token { get; set; }
-    public string? ErrorMessage { get; set; }
-}

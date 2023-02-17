@@ -15,16 +15,10 @@ namespace server.Controllers;
 [Route("api")]
 public class UserAuthenticationController : ControllerBase
 {
-    private DataContext _context;
-    private readonly IHelperFunctions _helper;
     private readonly IAuthenticationService _service;
 
-    public UserAuthenticationController(DataContext context,
-                                        IHelperFunctions helper,
-                                        IAuthenticationService service)
+    public UserAuthenticationController(IAuthenticationService service)
     {
-        _context = context;
-        _helper = helper;
         _service = service;
     }
 
@@ -35,7 +29,7 @@ public class UserAuthenticationController : ControllerBase
         var RegisterProcess = await _service.RegisterUser(UserRegisterRequest);
         if(RegisterProcess.IsSuccess)
         {
-            return Ok(new { token = RegisterProcess.Token });
+            return Ok(new { token = RegisterProcess.Value });
         }
         else
         {
@@ -50,7 +44,7 @@ public class UserAuthenticationController : ControllerBase
         var LoginProcess = await _service.LoginUser(UserLoginRequest);
         if(LoginProcess.IsSuccess)
         {
-            return Ok(new { token = LoginProcess.Token });
+            return Ok(new { token = LoginProcess.Value });
         }
         else
         {
@@ -61,17 +55,16 @@ public class UserAuthenticationController : ControllerBase
     [Authorize]
     [HttpGet]
     [Route("userinfo")]
-    public IActionResult GetUserInfo()
+    public async Task<IActionResult> GetUserInfo()
     {
-        var userId = _helper.GetRequestUserId(HttpContext);
-        var user = _context.Users.Find(userId);
-        if (user == null) return BadRequest("User not found from JWT claim. This should not be possible.");
-
-        var userStore = _context.Stores.Where(p => p.StoreOwnerId == user.Id).FirstOrDefault();
-        return Ok(new UserInfoDTO{ 
-            Email = user.Email,
-            Role = user.Role,
-            StoreName = userStore == null ? "" : userStore.Name
-        });
+        var GetUserInfoProcess = await _service.GetUserInfo(HttpContext);
+        if(GetUserInfoProcess.IsSuccess)
+        {
+            return Ok(GetUserInfoProcess.Value);
+        }
+        else
+        {
+            return BadRequest(GetUserInfoProcess.ErrorMessage);
+        }
     }
 }

@@ -2,8 +2,13 @@ import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UserInfoContext } from "../App";
 import Header from "../Components/Header";
+import { ProductInfo } from "../Types";
+
 
 function MyStorePage() {
+  const userInfo = useContext(UserInfoContext);
+  const navigate = useNavigate();
+  const [MyProducts, setMyProducts] = useState<ProductInfo[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [newProductName, setNewProductName] = useState("");
   const [newProductDescription, setNewProductDescription] = useState("");
@@ -12,10 +17,23 @@ function MyStorePage() {
   const [newProductQuantity, setNewProductQuantity] = useState("");
   const [newProductCategory, setNewProductCategory] = useState("");
 
+  useEffect(() => {
+    GetMyProducts();
+  }, []);
+
+  const GetMyProducts = async () => {
+    const authToken = localStorage.getItem("Authorization");
+    if(!authToken) return;
+    const response = await fetch(`http://localhost:5046/api/Store/${userInfo.storeName}`, {
+      headers: {
+        'Authorization': 'Bearer ' + authToken
+      }
+    });
+    if(response.status !== 200) return;
+    setMyProducts(await response.json());
+  };
 
 
-  const userInfo = useContext(UserInfoContext);
-  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("Authorization");
@@ -29,6 +47,10 @@ function MyStorePage() {
     //     'Authorization': 'Bearer ' + localStorage.getItem("Authorization") || ''
     //   }
     // });
+  }
+
+  const dostuff = () => {
+    console.log(MyProducts);
   }
 
   return (
@@ -52,6 +74,15 @@ function MyStorePage() {
           <button style={{padding: "10px 0px"}} type="button">Submit</button>
         </form>
       </>}
+      <h2>Your Products</h2>
+        {MyProducts.map(p => 
+        <>
+          <p>Name: {p.name}</p>
+          <p>Description: {p.description}</p>
+        </>
+        )}
+      <br></br>
+      <button onClick={dostuff}>Do stuff</button>
     </>
   );
 }
