@@ -8,11 +8,6 @@
   justify-content: space-around;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
 .App-header {
   display: flex;
   align-items: center;
@@ -21,28 +16,50 @@
   font-size: 35px;
 }
 
-a {
+.App-header a {
   color: white;
   text-decoration: none;
 }
 
-.login-page {
+.auth-form {
   display: flex;
   flex-direction: column;
   max-width: 20%;
   margin: auto;
+}
+
+.auth-form input {
+  margin-bottom: 5%;
+  padding: 2%;
+}
+
+.auth-form button {
+  padding: 2%;
+  border: none;
+}
+
+.auth-form select {
+  padding: 2%;
+  margin-bottom: 5%;
+  border: none;
+}
+
+.login-page {
+  margin-top: 5%;
 }
 
 .register-page {
+  margin-top: 5%;
+}
+
+.add-product-form {
   display: flex;
   flex-direction: column;
   max-width: 20%;
   margin: auto;
 }
 
-.create-store-page {
-  display: flex;
-  flex-direction: column;
-  max-width: 20%;
-  margin: auto;
+.add-product-form input {
+  padding: 2%;
+  margin-bottom: 5%;
 }

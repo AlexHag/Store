@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react';
 import { UserInfoContext } from '../App';
+import Header from '../Components/Header';
 
 function HomePage() {
   const userInfo = useContext(UserInfoContext);
@@ -24,10 +25,12 @@ function HomePage() {
 
   return (
     <>
+      <Header />
       <h1>Home page</h1>
       <button onClick={handleHello}>Say Hello</button>
       <p>Response: {helloMessage}</p>
       <p>Context: {userInfo.email}</p>
+      <p>Context: {userInfo.storeName}</p>
     </>
   )
 }

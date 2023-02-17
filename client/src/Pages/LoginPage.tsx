@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import Header from '../Components/Header';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -7,7 +8,8 @@ function LoginPage() {
   const [loginError, setLoginError] = useState('');
   let navigate = useNavigate();
   
-  const handleLogin = async () => {
+  const handleLogin = async (event: any) => {
+    event.preventDefault();
     setLoginError("Loading...");
 
     const requestOptions = {
@@ -20,9 +22,9 @@ function LoginPage() {
     const response = await fetch(`http://localhost:5046/api/login`, requestOptions);
     if(response.status === 200) {
       const jwtToken = await response.json();
-      console.log("JWT:TOKEN from login: ", jwtToken['token']);
       localStorage.setItem('Authorization', jwtToken['token']);
       navigate("/");
+      navigate(0);
     } else {
       setLoginError("Wrong email or password");
     }
@@ -30,11 +32,18 @@ function LoginPage() {
 
   return (
     <div className="login-page">
+      {/* <Header /> */}
+      
       <h1>Login page</h1>
-      <input placeholder="Email" onChange={(e) => setEmail(e.target.value)}></input>
-      <input placeholder="Password" onChange={(e) => setPassword(e.target.value)}></input>
-      <button onClick={handleLogin}>Login</button>
+      <form onSubmit={handleLogin} className="auth-form">
+        <input type="text" placeholder="Email" onChange={(e) => setEmail(e.target.value)}></input>
+        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)}></input>
+        <button type="submit">Login</button>
+      </form>
       <p style={{color: 'red'}}>{loginError}</p>
+      <Link to="/Register">No account? Register</Link>
+      <br></br>
+      <Link to="/">Home</Link>
     </div>
     )
 }

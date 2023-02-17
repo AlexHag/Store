@@ -21,22 +21,23 @@ public class StoreController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public IActionResult CreateStore([FromBody] string StoreName)
+    [Route("getstores")]
+    public IActionResult GetStores([FromBody] string StoreName)
     {
-        var userId = _helper.GetRequestUserId(HttpContext);
-        var user = _context.Users.Find(userId);
-        if (user == null) return BadRequest("User not found from JWT claim. This should not be possible.");
+        // var userId = _helper.GetRequestUserId(HttpContext);
+        // var user = _context.Users.Find(userId);
+        // if (user == null) return BadRequest("User not found from JWT claim. This should not be possible.");
 
-        if(user.Role.ToLower() != "storeowner") return BadRequest("Ownly store owners can create a new store");
+        // if(user.Role.ToLower() != "storeowner") return BadRequest("Ownly store owners can create a new store");
 
-        var newStore = new Store{
-            Id = Guid.NewGuid(),
-            Name = StoreName,
-            StoreOwnerId = user.Id
-        };
+        // var newStore = new Store{
+        //     Id = Guid.NewGuid(),
+        //     Name = StoreName,
+        //     StoreOwnerId = user.Id
+        // };
 
-        _context.Stores.Add(newStore);
-        _context.SaveChanges();
+        // _context.Stores.Add(newStore);
+        // _context.SaveChanges();
         return Ok();
     }
 }
