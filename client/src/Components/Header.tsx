@@ -1,9 +1,9 @@
 import { BrowserRouter, Link, Routes, Route } from 'react-router-dom';
-import { UserInfoContext } from '../App';
-import { useState, useContext } from 'react';
+import { UserInfo } from '../Types';
 
 function Header() {
-  const userInfo = useContext(UserInfoContext);
+  const userInfo: UserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}') as UserInfo;
+
   if(userInfo.role === 'storeowner') {
     return (
     <div className="App-header">

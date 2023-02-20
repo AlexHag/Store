@@ -1,12 +1,7 @@
 using server.Models;
-using server.Context;
 using server.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.Security.Claims;
-using System.IdentityModel.Tokens.Jwt;
 
 
 namespace server.Controllers;
@@ -26,30 +21,14 @@ public class UserAuthenticationController : ControllerBase
     [Route("register")]
     public async Task<IActionResult> Register([FromBody] UserRegisterDTO UserRegisterRequest)
     {
-        var RegisterProcess = await _service.RegisterUser(UserRegisterRequest);
-        if(RegisterProcess.IsSuccess)
-        {
-            return Ok(new { token = RegisterProcess.Value });
-        }
-        else
-        {
-            return BadRequest(RegisterProcess.ErrorMessage);
-        }
+        return await _service.RegisterUser(UserRegisterRequest);
     }
 
     [HttpPost]
     [Route("login")]
     public async Task<IActionResult> Login([FromBody] UserLoginDTO UserLoginRequest)
     {
-        var LoginProcess = await _service.LoginUser(UserLoginRequest);
-        if(LoginProcess.IsSuccess)
-        {
-            return Ok(new { token = LoginProcess.Value });
-        }
-        else
-        {
-            return BadRequest(LoginProcess.ErrorMessage);
-        }
+        return await _service.LoginUser(UserLoginRequest);
     }
 
     [Authorize]
@@ -57,14 +36,6 @@ public class UserAuthenticationController : ControllerBase
     [Route("userinfo")]
     public async Task<IActionResult> GetUserInfo()
     {
-        var GetUserInfoProcess = await _service.GetUserInfo(HttpContext);
-        if(GetUserInfoProcess.IsSuccess)
-        {
-            return Ok(GetUserInfoProcess.Value);
-        }
-        else
-        {
-            return BadRequest(GetUserInfoProcess.ErrorMessage);
-        }
+        return await _service.GetUserInfo(HttpContext);
     }
 }

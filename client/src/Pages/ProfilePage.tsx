@@ -1,10 +1,13 @@
 import Header from "../Components/Header";
 import { useState, useEffect, useContext } from 'react';
-import { UserInfoContext } from '../App';
+// import { UserInfoContext } from '../App';
 import { useNavigate } from "react-router-dom";
+import { UserInfo } from "../Types";
+import { useCookies } from "react-cookie";
 
 function ProfilePage() {
-  const userInfo = useContext(UserInfoContext);
+  const userInfo: UserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}') as UserInfo;
+  const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -12,9 +15,10 @@ function ProfilePage() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("Authorization");
-    navigate(0);
+    removeCookie("Authorization");
+    localStorage.removeItem("userInfo");
     navigate("/");
+    navigate(0);
   };
 
   return (

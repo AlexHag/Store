@@ -1,15 +1,30 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
-import { UserInfoContext } from "../App";
 import Header from "../Components/Header";
-import { ProductInfo } from "../Types";
+import { ProductInfo, UserInfo } from "../Types";
 
 
 function MyStorePage() {
-  const userInfo = useContext(UserInfoContext);
+  const userInfo: UserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}') as UserInfo;
+  const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if(!userInfo.email) navigate("/");
+    GetMyProducts();
+  }, []);
+
+  const handleLogout = () => {
+    removeCookie("Authorization");
+    localStorage.removeItem("userInfo");
+    navigate("/");
+    navigate(0);
+  };
+
   const [MyProducts, setMyProducts] = useState<ProductInfo[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [addProductError, setAddProductError] = useState("");
   const [newProductName, setNewProductName] = useState("");
   const [newProductDescription, setNewProductDescription] = useState("");
   const [newProductImgUrl, setNewProductImgUrl] = useState("");
@@ -17,40 +32,36 @@ function MyStorePage() {
   const [newProductQuantity, setNewProductQuantity] = useState("");
   const [newProductCategory, setNewProductCategory] = useState("");
 
-  useEffect(() => {
-    GetMyProducts();
-  }, []);
-
   const GetMyProducts = async () => {
-    const authToken = localStorage.getItem("Authorization");
-    if(!authToken) return;
+    
     const response = await fetch(`http://localhost:5046/api/Store/${userInfo.storeName}`, {
       headers: {
-        'Authorization': 'Bearer ' + authToken
+        'Authorization': 'Bearer ' + cookies['Authorization']
       }
     });
     if(response.status !== 200) return;
     setMyProducts(await response.json());
   };
 
+  const handleAddProductSubmit = async (event: any) => {
+    event.preventDefault();
+    setAddProductError('Loading...');
 
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + cookies['Authorization'] },
+      body: JSON.stringify({name: newProductName, description: newProductDescription, imageUrl: newProductImgUrl, price: newProductPrice, quantity: newProductQuantity, category: newProductCategory})
+    };
 
-  const handleLogout = () => {
-    localStorage.removeItem("Authorization");
-    navigate(0);
-    navigate("/");
-  };
-
-  const handleAddProductSubmit = async () => {
-    // const response = await fetch('http://localhost:5046/api/secure', {
-    //   headers: {
-    //     'Authorization': 'Bearer ' + localStorage.getItem("Authorization") || ''
-    //   }
-    // });
-  }
-
-  const dostuff = () => {
-    console.log(MyProducts);
+    const response = await fetch('http://localhost:5046/api/Products/Add', requestOptions)
+    if(response.status !== 201) {
+      setAddProductError(`Error adding product: ${await response.text()} Status: ${response.status}`);
+      return;
+    }
+    setAddProductError("");
+    GetMyProducts();
   }
 
   return (
@@ -71,8 +82,9 @@ function MyStorePage() {
           <input type="number" placeholder="Price" onChange={(e) => setNewProductPrice(e.target.value)}></input>
           <input type="number" placeholder="Quantity" onChange={(e) => setNewProductQuantity(e.target.value)}></input>
           <input type="number" placeholder="Category" onChange={(e) => setNewProductCategory(e.target.value)}></input>
-          <button style={{padding: "10px 0px"}} type="button">Submit</button>
+          <button style={{padding: "10px 0px"}} type="submit">Submit</button>
         </form>
+        <p style={{color: 'red'}}>{addProductError}</p>
       </>}
       <h2>Your Products</h2>
         {MyProducts.map(p => 
@@ -82,7 +94,6 @@ function MyStorePage() {
         </>
         )}
       <br></br>
-      <button onClick={dostuff}>Do stuff</button>
     </>
   );
 }

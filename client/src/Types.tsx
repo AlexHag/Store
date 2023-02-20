@@ -1,3 +1,10 @@
+import React from "react"
+
+export interface IUserInfoContext {
+  UserInfo: UserInfo,
+  SetUserInfo: React.Dispatch<React.SetStateAction<UserInfo>>
+}
+
 
 export interface UserInfo {
   email: string,

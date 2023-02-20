@@ -5,7 +5,7 @@ namespace server.Services;
 
 public interface IAuthenticationService
 {
-    public Task<ControllerServiceResponse> RegisterUser(UserRegisterDTO UserRegisterRequest);
-    public Task<ControllerServiceResponse> LoginUser(UserLoginDTO UserLoginRequest);
-    public Task<ControllerServiceResponse> GetUserInfo(HttpContext httpContext);
+    public Task<IActionResult> RegisterUser(UserRegisterDTO UserRegisterRequest);
+    public Task<IActionResult> LoginUser(UserLoginDTO UserLoginRequest);
+    public Task<IActionResult> GetUserInfo(HttpContext httpContext);
 }

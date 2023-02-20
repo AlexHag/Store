@@ -29,6 +29,7 @@ function RegisterPage() {
     }
 
     setRegisterStatus('Loading...');
+    
     const requestOptions = {
       method: 'POST',
       headers: { 'Accept': 'application/json',
@@ -38,9 +39,9 @@ function RegisterPage() {
 
     const response = await fetch(`http://localhost:5046/api/register`, requestOptions);
     if(response.status === 200) {
-      const jwtToken = await response.json();
-      localStorage.setItem('Authorization', jwtToken['token']);
-      setCookie('Authorization', jwtToken['token']);
+      const LoginResponse = await response.json();
+      setCookie('Authorization', LoginResponse['token']);
+      localStorage.setItem('userInfo', LoginResponse['userInfo']);
       navigate("/");
     } else {
       setRegisterStatus('Email already exists');

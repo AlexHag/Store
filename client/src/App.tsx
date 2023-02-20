@@ -13,32 +13,32 @@ import RegisterPage from './Pages/RegisterPage';
 import ErrorOccuredPage from './Pages/ErrorOccuredPage';
 import MyStorePage from './Pages/MyStorePage';
 import ProfilePage from './Pages/ProfilePage';
-import { UserInfo } from './Types';
+import { UserInfo, IUserInfoContext } from './Types';
 
-export const UserInfoContext = createContext<UserInfo>({email: "", role: "", storeName: ""});
+// export const UserInfoContext = createContext<IUserInfoContext>({UserInfo: {email: "", role: "", storeName: ""}, SetUserInfo: () => {}});
 
 function App() {
-  const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
-  const [userInfoValue, setUserInfoValue] = useState<UserInfo>({email: "", role: "", storeName: ""});
+  // const [userInfo, setUserInfo] = useState<UserInfo>({email: "", role: "", storeName: ""});
+  // const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
 
-  useEffect(() => {
-    console.log("App.tsx use effect excecuting")
-    GetUserInfo();
-  }, []);
+  // useEffect(() => {
+  //   console.log("getting user info from app.tsx")
+  //   GetUserInfo();
+  // }, []);
 
-  const GetUserInfo = async () => {
-    if(!cookies['Authorization']) return;
-    const response = await fetch('http://localhost:5046/api/userinfo', {
-      headers: {
-        'Authorization': 'Bearer ' + cookies['Authorization']
-      }
-    });
-    if(response.status !== 200) return;
-    setUserInfoValue(await response.json());
-  }
+  // const GetUserInfo = async () => {
+  //   if(!cookies['Authorization']) return;
+  //   const response = await fetch('http://localhost:5046/api/userinfo', {
+  //     headers: {
+  //       'Authorization': 'Bearer ' + cookies['Authorization']
+  //     }
+  //   });
+  //   if(response.status !== 200) return;
+  //   setUserInfo(await response.json());
+  // }
 
   return (
-    <UserInfoContext.Provider value={userInfoValue}>
+    // <UserInfoContext.Provider value={{UserInfo: userInfo, SetUserInfo: setUserInfo}} >
       <BrowserRouter> 
         <div className="App">
           <Routes> 
@@ -52,7 +52,7 @@ function App() {
           </Routes>  
         </div>
       </BrowserRouter>
-    </UserInfoContext.Provider>
+    // </UserInfoContext.Provider>
   );
 }
 

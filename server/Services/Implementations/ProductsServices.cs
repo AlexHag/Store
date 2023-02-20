@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using server.Context;
 using server.Models;
@@ -14,30 +15,19 @@ public class ProductsService : IProductsService
         _context = context;
     }
 
-    public async Task<ControllerServiceResponse> AddProduct(AddProductDTO AddProductRequest, HttpContext httpContext)
+    public async Task<IActionResult> AddProduct(AddProductDTO AddProductRequest, HttpContext httpContext)
     {
         var userId = _helper.GetRequestUserId(httpContext);
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return new ControllerServiceResponse
-        {
-            IsSuccess = false,
-            ErrorMessage = "User is null eventhough jwt token is valid. This should not happen."
-        };
+        if (user == null) return new BadRequestObjectResult("User is null eventhough jwt token is valid. This should not happen.");
 
-        if(user.Role.ToLower() != "storeowner") return new ControllerServiceResponse
-        {
-            IsSuccess = false,
-            ErrorMessage = "Only store owners can add products."
-        };
+        if(user.Role.ToLower() != "storeowner") return new BadRequestObjectResult("Only store owners can add products.");
+        
 
         var productExists = _context.Products
             .Where(p => p.Name == AddProductRequest.Name)
             .FirstOrDefault();
-        if(productExists != null) return new ControllerServiceResponse
-        {
-            IsSuccess = false,
-            ErrorMessage = $"Product with name {AddProductRequest.Name} already exist."
-        };
+        if(productExists != null) return new BadRequestObjectResult($"Product with name {AddProductRequest.Name} already exist.");
 
         var ProductToAdd = new Product
         {
@@ -54,26 +44,14 @@ public class ProductsService : IProductsService
         await _context.Products.AddAsync(ProductToAdd);
         await _context.SaveChangesAsync();
 
-        return new ControllerServiceResponse
-        {
-            IsSuccess = true,
-            Value = ProductToAdd.Id
-        };
+        return new CreatedAtActionResult("GetProduct","Products", new { ProductId = ProductToAdd.Id }, ProductToAdd);
     }
 
-    public async Task<ControllerServiceResponse> GetProduct(Guid ProductId)
+    public async Task<IActionResult> GetProduct(Guid ProductId)
     {
         var product = await _context.Products.FindAsync(ProductId);
-        if(product == null) return new ControllerServiceResponse
-        {
-            IsSuccess = false,
-            ErrorMessage = "Product not found"
-        };
-        return new ControllerServiceResponse
-        {
-            IsSuccess = true,
-            Value = product
-        };
+        if(product == null) return new NotFoundObjectResult(null);
+        return new OkObjectResult(product);
     }
 
     public async Task<ControllerServiceResponse> GetProductFromStore(String StoreName)
@@ -96,33 +74,4 @@ public class ProductsService : IProductsService
     {
         throw new NotImplementedException();
     }
-
-    // public async Task<bool> AddProduct(AddProductDTO AddProductRequest, HttpContext httpContext)
-    // {
-    //     var userId = _helper.GetRequestUserId(httpContext);
-    //     var user = _context.Users.Find(userId);
-    //     if (user == null) return false;
-
-    //     if(user.Role.ToLower() != "storeowner") return false;
-
-    //     var productExists = _context.Products
-    //         .Where(p => p.Name == AddProductRequest.Name)
-    //         .FirstOrDefault();
-    //     if(productExists != null) return false;
-
-    //     await _context.Products.AddAsync(new Product
-    //     {
-    //         Id = Guid.NewGuid(),
-    //         Name = AddProductRequest.Name,
-    //         Description = AddProductRequest.Description,
-    //         ImageUrl = AddProductRequest.ImageUrl,
-    //         Price = AddProductRequest.Price,
-    //         Quantity = AddProductRequest.Quantity,
-    //         Category = AddProductRequest.Category,
-    //         StoreId = user.StoreId
-    //     });
-    //     await _context.SaveChangesAsync();
-
-    //     return true;
-    // }
 }

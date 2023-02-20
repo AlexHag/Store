@@ -1,22 +1,20 @@
 import { useState, useContext } from 'react';
 import { useCookies } from 'react-cookie';
-import { UserInfoContext } from '../App';
+// import { UserInfoContext } from '../App';
 import Header from '../Components/Header';
+import { UserInfo } from '../Types';
 
 function HomePage() {
-  const userInfo = useContext(UserInfoContext);
+  const userInfo: UserInfo = JSON.parse(localStorage.getItem('userInfo') || '{}') as UserInfo;
+
   const [helloMessage, setHelloMessage] = useState('');
   const [cookies, setCookie, removeCookie] = useCookies(['Authorization']);
 
-  const jwtInfo = cookies['Authorization'] ? JSON.parse(atob(cookies['Authorization'].split(".")[1])) : null; //.split(".")[1]))
-  
-  
   const handleHello = async () => {
-    console.log(jwtInfo['Id'])
     try {
       const response = await fetch('http://localhost:5046/api/secure', {
         headers: {
-          'Authorization': 'Bearer ' + localStorage.getItem("Authorization") || ''
+          'Authorization': 'Bearer ' + cookies['Authorization']
         }
       });
       if(response.ok) {
@@ -37,6 +35,7 @@ function HomePage() {
       <p>Response: {helloMessage}</p>
       <p>Context: {userInfo.email}</p>
       <p>Context: {userInfo.storeName}</p>
+      <p>Local storage email: {userInfo.email}</p>
     </>
   )
 }

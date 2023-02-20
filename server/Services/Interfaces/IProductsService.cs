@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using server.Models;
 
 namespace server.Services;
@@ -5,10 +6,10 @@ namespace server.Services;
 public interface IProductsService
 {
     // Create
-    public Task<ControllerServiceResponse> AddProduct(AddProductDTO AddProductRequest, HttpContext context);
+    public Task<IActionResult> AddProduct(AddProductDTO AddProductRequest, HttpContext context);
     
     // Read
-    public Task<ControllerServiceResponse> GetProduct(Guid ProductId);
+    public Task<IActionResult> GetProduct(Guid ProductId);
     public Task<ControllerServiceResponse> GetProductFromStore(string StoreName);
 
     // Update [HttpPut]

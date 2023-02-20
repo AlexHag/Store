@@ -24,26 +24,18 @@ public class AuthenticationService : IAuthenticationService
         _helper = helper;
     }
 
-    public async Task<ControllerServiceResponse> RegisterUser(UserRegisterDTO UserRegisterRequest)
+    public async Task<IActionResult> RegisterUser(UserRegisterDTO UserRegisterRequest)
     {
         if(UserRegisterRequest.Role.ToLower() != "user" && UserRegisterRequest.Role.ToLower() != "storeowner") 
         {
-            return new ControllerServiceResponse
-            {
-                IsSuccess = false,
-                ErrorMessage = "Role must be either user or storeowner"
-            };
+            return new BadRequestObjectResult("Role must be either user or storeowner");
         }
 
         var existingUser = _context.Users
             .FirstOrDefault(u => u.Email == UserRegisterRequest.Email);
         if (existingUser != null) 
         {
-            return new ControllerServiceResponse
-            {
-                IsSuccess = false,
-                ErrorMessage = "Email already exists"
-            };
+            return new BadRequestObjectResult("Email already exists");
         }
 
         Random random = new Random();
@@ -69,12 +61,14 @@ public class AuthenticationService : IAuthenticationService
         {
             if(String.IsNullOrEmpty(UserRegisterRequest.StoreName)) 
             {
-                return new ControllerServiceResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Store owner must provide a store name"
-                };
+                return new BadRequestObjectResult("Store owner must provide a store name");
             }
+            var newStore = new Store 
+            {
+                Id = newUser.StoreId,
+                Name = UserRegisterRequest.StoreName,
+                StoreOwnerId = newUser.Id
+            };
             await _context.Stores.AddAsync(new Store 
             {
                 Id = newUser.StoreId,
@@ -85,14 +79,18 @@ public class AuthenticationService : IAuthenticationService
 
         await _context.SaveChangesAsync();
         var token = CreateJWT(newUser.Id);
-        return new ControllerServiceResponse 
-        {
-            IsSuccess = true,
-            Value = token
-        };
+        return new OkObjectResult(new 
+        { 
+            Authorization = token,
+            userInfo = new 
+            {
+                Email = newUser.Email,
+                Role = newUser.Role,
+                StoreName = UserRegisterRequest.Role == "storeowner" ? UserRegisterRequest.StoreName : ""
+            } 
+        });
     }
-
-    public async Task<ControllerServiceResponse> LoginUser(UserLoginDTO UserLoginRequest)
+    public async Task<IActionResult> LoginUser(UserLoginDTO UserLoginRequest)
     {
         var userSalt = _context.Users
             .Where(u => u.Email == UserLoginRequest.Email)
@@ -100,50 +98,45 @@ public class AuthenticationService : IAuthenticationService
             .FirstOrDefault();
         if (userSalt == null) 
         {
-            return new ControllerServiceResponse 
-            {
-                IsSuccess = false,
-                ErrorMessage = "Wrong username or password"
-            };
+            return new BadRequestObjectResult("Wrong username or password");
         }
         var passwordHash = HashString(UserLoginRequest.Password + userSalt);
         var existingUser = _context.Users
             .Where(u => u.Email == UserLoginRequest.Email && u.Password == passwordHash)
             .FirstOrDefault();
+        
         if (existingUser == null) 
         {
-            return new ControllerServiceResponse 
-            {
-                IsSuccess = false,
-                ErrorMessage = "Wrong username or password"
-            };
+            return new BadRequestObjectResult("Wrong username or password");
         }
 
         var token = CreateJWT(existingUser.Id);
-
-        return new ControllerServiceResponse
-        {
-            IsSuccess = true,
-            Value = token
-        };
+        
+        return new OkObjectResult(new 
+        { 
+            Authorization = token,
+            userInfo = new 
+            {
+                Email = existingUser.Email,
+                Role = existingUser.Role,
+                StoreName = existingUser.Role == "storeowner" ? _context.Stores.Where(p => p.StoreOwnerId == existingUser.Id).FirstOrDefault().Name : ""
+            }
+        });
     }
 
-    public async Task<ControllerServiceResponse> GetUserInfo(HttpContext httpContext) 
+    public async Task<IActionResult> GetUserInfo(HttpContext httpContext) 
     {
         var userId = _helper.GetRequestUserId(httpContext);
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) throw new Exception("User is null eventhough jwt token is valid. This should not happen.");
+        // Throw or log exception error
+        if (user == null) return new BadRequestObjectResult("User is null eventhough jwt token is valid. This should not happen.");
 
         var userStore = _context.Stores.Where(p => p.StoreOwnerId == user.Id).FirstOrDefault();
-        return new ControllerServiceResponse
-        {
-            IsSuccess = true,
-            Value =  new UserInfoDTO { 
+        return new OkObjectResult(new UserInfoDTO { 
             Email = user.Email,
             Role = user.Role,
             StoreName = userStore == null ? "" : userStore.Name
-            }
-        };
+        });
     }
     
     private string CreateJWT(Guid userId)

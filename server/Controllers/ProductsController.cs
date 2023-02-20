@@ -20,29 +20,13 @@ public class ProductsController : ControllerBase
     [Route("Products/Add")]
     public async Task<IActionResult> AddProduct([FromBody] AddProductDTO AddProductRequest)
     {
-        var AddProductProcess = await _service.AddProduct(AddProductRequest, HttpContext);
-        if(AddProductProcess.IsSuccess)
-        {
-            return Ok(AddProductProcess.Value);
-        }
-        else
-        {
-            return BadRequest(AddProductProcess.ErrorMessage);
-        }
+        return await _service.AddProduct(AddProductRequest, HttpContext);
     }
 
     [HttpGet("Product/{ProductId}")]
     public async Task<IActionResult> GetProduct(Guid ProductId)
     {
-        var GetProductProcess = await _service.GetProduct(ProductId);
-        if(GetProductProcess.IsSuccess)
-        {
-            return Ok(GetProductProcess.Value);
-        }
-        else
-        {
-            return NotFound(GetProductProcess.ErrorMessage);
-        }
+        return await _service.GetProduct(ProductId);
     }
 
     [HttpGet("Store/{StoreName}")]

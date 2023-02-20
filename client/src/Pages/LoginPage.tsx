@@ -24,20 +24,17 @@ function LoginPage() {
 
     const response = await fetch(`http://localhost:5046/api/login`, requestOptions);
     if(response.status === 200) {
-      const jwtToken = await response.json();
-      localStorage.setItem('Authorization', jwtToken['token']);
-      setCookie('Authorization', jwtToken['token']);
+      const LoginResponse = await response.json();
+      setCookie('Authorization', LoginResponse['token']);
+      localStorage.setItem('userInfo', JSON.stringify(LoginResponse['userInfo']));
       navigate("/");
-      navigate(0);
     } else {
       setLoginError("Wrong email or password");
     }
   }
 
   return (
-    <div className="login-page">
-      {/* <Header /> */}
-      
+    <div className="login-page">      
       <h1>Login page</h1>
       <form onSubmit={handleLogin} className="auth-form">
         <input type="text" placeholder="Email" onChange={(e) => setEmail(e.target.value)}></input>
